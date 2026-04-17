@@ -1,5 +1,9 @@
-Backend: Node.js (Express.js)
-Frontend: React.js (HTML5, CSS3, JavaScript)
-Database: MongoDB
-Architecture: MVC + REST APIs
-Automation: Cron Jobs (node-cron) + Event-driven workflow + Email/SMS (Nodemailer/Twilio)
+Backend: Node.js + Express + MongoDB + Mongoose
+Frontend: React + Tailwind CSS
+Auth: JWT + bcrypt
+Automation: node-cron + EventEmitter / Bull
+Email/SMS: Nodemailer + Twilio
+Payment: Razorpay / Stripe
+Storage: Cloudinary / AWS S3
+PDF: pdfkit
+Realtime: Socket.io (optional)
