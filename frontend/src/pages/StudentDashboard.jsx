@@ -12,8 +12,8 @@ export default function StudentDashboard() {
     // Mock API call
     setTimeout(() => {
       setEnrolledCourses([
-        { id: 1, title: 'React Mastery', progress: 65, thumbnail: 'https://via.placeholder.com/300x150' },
-        { id: 2, title: 'Node.js Backend', progress: 30, thumbnail: 'https://via.placeholder.com/300x150' },
+        { id: 1, title: 'React Mastery', progress: 65, thumbnail: 'https://source.unsplash.com/300x150/?react' },
+        { id: 2, title: 'Node.js Backend', progress: 30, thumbnail: 'https://picsum.photos/id/101/300/150' },
       ]);
       setLoading(false);
     }, 500);
@@ -76,3 +76,4 @@ export default function StudentDashboard() {
     </Layout>
   );
 }
+
