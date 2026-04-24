@@ -15,12 +15,15 @@ const courseSchema = mongoose.Schema(
       required: true,
       ref: 'User',
     },
-    studentsEnrolled: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
+    category: {
+      type: String,
+      required: [true, 'Please add a category'],
+    },
+    level: {
+      type: String,
+      enum: ['Beginner', 'Intermediate', 'Advanced'],
+      default: 'Beginner',
+    },
     price: {
       type: Number,
       required: true,
@@ -29,6 +32,31 @@ const courseSchema = mongoose.Schema(
     thumbnail: {
       type: String,
       default: 'default-course.png',
+    },
+    lessons: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Lesson',
+      },
+    ],
+    rating: {
+      type: Number,
+      default: 0,
+    },
+    numReviews: {
+      type: Number,
+      default: 0,
+    },
+    studentsEnrolled: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    status: {
+      type: String,
+      enum: ['Draft', 'Published'],
+      default: 'Published',
     },
   },
   {
