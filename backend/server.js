@@ -32,6 +32,8 @@ app.use(cors());
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/upload', require('./routes/uploadRoutes'));
 
 // Root route
 app.get('/', (req, res) => {
