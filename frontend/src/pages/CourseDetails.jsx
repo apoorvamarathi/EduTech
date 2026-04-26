@@ -10,6 +10,7 @@ export default function CourseDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Mock API call – replace with real data fetch
     setTimeout(() => {
       setCourse({
         id: parseInt(id),
@@ -20,17 +21,42 @@ export default function CourseDetails() {
         lessons: ['Introduction', 'Components & Props', 'State & Hooks', 'Effects & API Calls'],
         duration: '12 hours',
         students: 1234,
+        thumbnail: 'https://via.placeholder.com/300x150',
       });
       setLoading(false);
     }, 500);
   }, [id]);
+const handleEnroll = () => {
+  // Get existing cart
+  const existingCart = localStorage.getItem('cart');
+  let cart = existingCart ? JSON.parse(existingCart) : [];
 
-  const handleEnroll = () => {
-    // Add to cart logic
-    navigate('/cart');
-  };
+  // Check if course already in cart
+  const existingItem = cart.find(item => item.id === course.id);
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({
+      id: course.id,
+      title: course.title,
+      price: course.price,
+      quantity: 1,
+      thumbnail: course.thumbnail,
+    });
+  }
+
+  // Save to localStorage
+  localStorage.setItem('cart', JSON.stringify(cart));
+  
+  // Optional: verify it saved
+  console.log('Cart after adding:', JSON.parse(localStorage.getItem('cart')));
+
+  // Go directly to payment checkout page
+  navigate('/checkout');
+};
 
   if (loading) return <Layout><div className="text-center py-20">Loading...</div></Layout>;
+  if (!course) return <Layout><div className="text-center py-20">Course not found</div></Layout>;
 
   return (
     <Layout>
@@ -58,7 +84,9 @@ export default function CourseDetails() {
             <span className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>${course.price}</span>
             <span className="text-sm ml-2" style={{ color: 'var(--text)' }}>One-time payment</span>
           </div>
-          <button onClick={handleEnroll} className="px-6 py-2 rounded-lg font-semibold" style={{ background: 'var(--accent)', color: 'white' }}>Enroll Now</button>
+          <button onClick={handleEnroll} className="px-6 py-2 rounded-lg font-semibold" style={{ background: 'var(--accent)', color: 'white' }}>
+            Enroll Now
+          </button>
         </div>
       </div>
     </Layout>

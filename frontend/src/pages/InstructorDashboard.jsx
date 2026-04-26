@@ -1,68 +1,66 @@
-// frontend/src/pages/InstructorDashboard.jsx
+// frontend/src/pages/InstructorCourses.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 
-export default function InstructorDashboard() {
+export default function InstructorCourses() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      setCourses([
-        { id: 1, title: 'React for Beginners', students: 245, revenue: 2450, status: 'Published' },
-        { id: 2, title: 'Advanced Node.js', students: 98, revenue: 1960, status: 'Draft' },
-      ]);
-      setLoading(false);
-    }, 500);
+    const stored = localStorage.getItem('instructorCourses');
+    const instructorId = JSON.parse(localStorage.getItem('userInfo'))._id;
+    const allCourses = stored ? JSON.parse(stored) : [];
+    const myCourses = allCourses.filter(c => c.instructorId === instructorId);
+    setCourses(myCourses);
+    setLoading(false);
   }, []);
+
+  const deleteCourse = (id) => {
+    if (window.confirm('Delete this course?')) {
+      const updated = courses.filter(c => c.id !== id);
+      // Update localStorage
+      const all = JSON.parse(localStorage.getItem('instructorCourses') || '[]');
+      const filteredAll = all.filter(c => c.id !== id);
+      localStorage.setItem('instructorCourses', JSON.stringify(filteredAll));
+      setCourses(updated);
+      alert('Course deleted');
+    }
+  };
 
   return (
     <Layout>
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold" style={{ color: 'var(--text-h)' }}>Instructor Dashboard</h1>
-            <p style={{ color: 'var(--text)' }}>Manage your courses and earnings</p>
-          </div>
-          <Link to="/courses/create" className="px-4 py-2 rounded-lg" style={{ background: 'var(--accent)', color: 'white' }}>+ New Course</Link>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-h)' }}>My Courses</h1>
+          <Link to="/create-course" className="px-4 py-2 rounded-lg" style={{ background: 'var(--accent)', color: 'white' }}>+ New Course</Link>
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-            <p className="text-sm" style={{ color: 'var(--text)' }}>Total Students</p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--text-h)' }}>343</p>
+        {loading && <div className="text-center py-10">Loading...</div>}
+        {!loading && courses.length === 0 && (
+          <div className="text-center py-12 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+            <p>You haven't created any courses yet.</p>
+            <Link to="/create-course" className="inline-block mt-3 underline" style={{ color: 'var(--accent)' }}>Create your first course</Link>
           </div>
-          <div className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-            <p className="text-sm" style={{ color: 'var(--text)' }}>Total Revenue</p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--text-h)' }}>$4,410</p>
-          </div>
-          <div className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-            <p className="text-sm" style={{ color: 'var(--text)' }}>Courses</p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--text-h)' }}>{courses.length}</p>
-          </div>
-        </div>
-
-        {/* My Courses */}
-        <div>
-          <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-h)' }}>My Courses</h2>
-          {loading ? <div>Loading...</div> : (
-            <div className="space-y-3">
-              {courses.map(course => (
-                <div key={course.id} className="flex justify-between items-center p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-                  <div>
-                    <h3 className="font-semibold" style={{ color: 'var(--text-h)' }}>{course.title}</h3>
-                    <p className="text-sm" style={{ color: 'var(--text)' }}>{course.students} students · ${course.revenue} revenue</p>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded-full" style={{ background: course.status === 'Published' ? 'var(--accent-bg)' : 'var(--code-bg)', color: course.status === 'Published' ? 'var(--accent)' : 'var(--text)' }}>{course.status}</span>
+        )}
+        <div className="grid gap-4">
+          {courses.map(course => (
+            <div key={course.id} className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-semibold">{course.title}</h3>
+                  <p className="text-sm">Category: {course.category}</p>
+                  <p className="text-sm">Price: {course.isFree ? 'Free' : `₹${course.price}`}</p>
+                  <p className="text-xs">Status: <span style={{ color: course.status === 'approved' ? 'green' : 'orange' }}>{course.status}</span></p>
                 </div>
-              ))}
+                <div className="flex gap-2">
+                  <Link to={`/edit-course/${course.id}`} className="px-3 py-1 rounded-lg text-sm" style={{ background: 'var(--accent)', color: 'white' }}>Edit</Link>
+                  <button onClick={() => deleteCourse(course.id)} className="px-3 py-1 rounded-lg text-sm border" style={{ borderColor: 'red', color: 'red' }}>Delete</button>
+                </div>
+              </div>
             </div>
-          )}
+          ))}
         </div>
       </div>
     </Layout>
   );
 }
-

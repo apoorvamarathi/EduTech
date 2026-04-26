@@ -123,3 +123,14 @@ code {
   background-size: 200% 200%;
   animation: gradient 8s ease infinite;
 }
+@media print {
+  nav, footer, .no-print {
+    display: none !important;
+  }
+  .certificate-container {
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    border: none;
+  }
+}
