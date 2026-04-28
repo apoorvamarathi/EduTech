@@ -341,7 +341,7 @@ export default function CourseLearning() {
 
         {/* Discussion Forum */}
         <div className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-          <h2 className="text-xl font-semibold mb-2">💬 Discussion Forum</h2>
+          <h2 className="text-xl font-semibold mb-2"> 💬 Discussion Forum</h2>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {forumPosts.length === 0 && <p className="text-sm">No discussions yet. Be the first to ask a question.</p>}
             {forumPosts.map(post => (
