@@ -79,7 +79,7 @@ export default function CertificateViewer() {
             {/* QR Code */}
             <div className="flex flex-col items-center mt-8">
               <img src={cert.qrCodeUrl} alt="Verification QR" className="w-28 h-28 border-2 border-gray-300 rounded-lg p-1" />
-              <p className="text-xs mt-2" style={{ color: 'var(--text)' }}>Scan to verify authenticity</p>
+              <p className="text-xs mt-2" style={{ color: 'var(--text)' }}>Scan to Verify authenticity</p>
             </div>
 
             {/* Signatures */}
@@ -91,7 +91,7 @@ export default function CertificateViewer() {
               </div>
               <div className="text-right">
                 <div className="w-40 h-0.5 bg-gray-400 mb-1 ml-auto"></div>
-                <p className="text-sm font-medium">Edutech Platform</p>
+                <p className="text-sm font-medium">EduTech Platform</p>
                 <p className="text-xs">www.edutech.com/verify</p>
               </div>
             </div>
