@@ -25,8 +25,15 @@ export default function Layout({ children }) {
             <div className="flex items-center gap-6">
               {isLoggedIn ? (
                 <>
-                  <Link to="/dashboard" className="hover:opacity-80" style={{ color: 'var(--text-h)' }}>Dashboard</Link>
-                  <Link to="/courses" className="hover:opacity-80" style={{ color: 'var(--text-h)' }}>Courses</Link>
+                  <Link to={
+                    userInfo.role === 'admin' ? '/admin' :
+                    userInfo.role === 'instructor' ? '/instructor/earnings' :
+                    userInfo.role === 'recruiter' ? '/recruiter/dashboard' :
+                    '/dashboard'
+                  } className="hover:opacity-80" style={{ color: 'var(--text-h)' }}>Dashboard</Link>
+                  <Link to={userInfo.role === 'instructor' ? '/instructor' : '/courses'} className="hover:opacity-80" style={{ color: 'var(--text-h)' }}>
+                    {userInfo.role === 'instructor' ? 'My Courses' : 'Courses'}
+                  </Link>
                   <Link to="/jobs" className="hover:opacity-80" style={{ color: 'var(--text-h)' }}>Jobs</Link>
                   <button onClick={handleLogout} className="px-4 py-2 rounded-lg text-sm font-medium transition" style={{ background: 'var(--accent)', color: 'white' }}>Logout</button>
                 </>

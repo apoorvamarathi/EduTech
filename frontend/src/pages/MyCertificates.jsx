@@ -1,61 +1,9 @@
-// // frontend/src/pages/MyCertificates.jsx
-// import React, { useState, useEffect } from 'react';
-// import { Link } from 'react-router-dom';
-// import Layout from '../components/Layout';
-
-// export default function MyCertificates() {
-//   const [certificates, setCertificates] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     // Load certificates from localStorage (saved after passing quizzes)
-//     const stored = localStorage.getItem('myCertificates');
-//     if (stored) {
-//       setCertificates(JSON.parse(stored));
-//     } else {
-//       // Optional: demo certificate for testing
-//       // setCertificates([...]);
-//     }
-//     setLoading(false);
-//   }, []);
-
-//   if (loading) return <Layout><div className="text-center py-20">Loading...</div></Layout>;
-
-//   return (
-//     <Layout>
-//       <div className="space-y-6">
-//         <h1 className="text-3xl font-bold" style={{ color: 'var(--text-h)' }}>My Certificates</h1>
-//         {certificates.length === 0 ? (
-//           <div className="text-center py-10 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-//             <p style={{ color: 'var(--text)' }}>No certificates yet. Complete a course quiz with a passing score to earn one.</p>
-//             <Link to="/courses" className="inline-block mt-3 px-4 py-2 rounded-lg" style={{ background: 'var(--accent)', color: 'white' }}>Browse Courses</Link>
-//           </div>
-//         ) : (
-//           <div className="grid gap-4">
-//             {certificates.map(cert => (
-//               <div key={cert.id} className="flex justify-between items-center p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-//                 <div>
-//                   <h3 className="font-semibold text-lg" style={{ color: 'var(--text-h)' }}>{cert.courseTitle}</h3>
-//                   <p className="text-sm" style={{ color: 'var(--text)' }}>Issued: {cert.issueDate} · Credential ID: {cert.credentialId}</p>
-//                 </div>
-//                 <Link to={`/certificate/${cert.id}`} className="px-3 py-1 rounded-lg text-sm" style={{ background: 'var(--accent)', color: 'white' }}>
-//                   View
-//                 </Link>
-//               </div>
-//             ))}
-//           </div>
-//         )}
-//       </div>
-//     </Layout>
-//   );
-// }
-
-
 // frontend/src/pages/MyCertificates.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
+import api from '../utils/api';
 
 // SVG Icons
 const CertificateIcon = () => (
@@ -77,14 +25,20 @@ export default function MyCertificates() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('myCertificates');
-    if (stored) {
-      setCertificates(JSON.parse(stored));
-    }
-    setLoading(false);
+    const fetchCertificates = async () => {
+      try {
+        const { data } = await api.get('/certificates/my');
+        setCertificates(data);
+      } catch (error) {
+        console.error('Failed to fetch certificates', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCertificates();
   }, []);
 
-  if (loading) return <Layout><div className="text-center py-20">Loading...</div></Layout>;
+  if (loading) return <Layout><div className="text-center py-20">Loading certificates...</div></Layout>;
 
   return (
     <Layout>
@@ -116,7 +70,7 @@ export default function MyCertificates() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {certificates.map((cert, idx) => (
               <motion.div
-                key={cert.id}
+                key={cert._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
@@ -132,21 +86,23 @@ export default function MyCertificates() {
                     </div>
                     <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>Verified</span>
                   </div>
-                  <h3 className="text-xl font-bold mt-3" style={{ color: 'var(--text-h)' }}>{cert.courseTitle}</h3>
-                  <p className="text-sm mt-1" style={{ color: 'var(--text)' }}>ID: {cert.credentialId}</p>
-                  <p className="text-xs mt-2" style={{ color: 'var(--text)' }}>Issued: {cert.issueDate}</p>
+                  <h3 className="text-xl font-bold mt-3" style={{ color: 'var(--text-h)' }}>{cert.course?.title || 'Unknown Course'}</h3>
+                  <p className="text-sm mt-1" style={{ color: 'var(--text)' }}>ID: {cert._id}</p>
+                  <p className="text-xs mt-2" style={{ color: 'var(--text)' }}>Issued: {new Date(cert.issuedDate).toLocaleDateString()}</p>
                   <div className="flex justify-between items-center mt-4">
                     <div className="flex items-center gap-1 text-sm">
-                      <span>⭐ {cert.score}</span>
-                      <span className="text-xs">Grade {cert.grade}</span>
+                      {/* Placeholder since score isn't saved on certificate model yet */}
+                      <span>⭐ Passed</span>
                     </div>
-                    <Link
-                      to={`/certificate/${cert.id}`}
+                    <a
+                      href={`http://localhost:5000${cert.pdfUrl}`}
+                      target="_blank"
+                      rel="noreferrer"
                       className="px-4 py-1.5 rounded-lg text-sm font-medium transition group-hover:shadow-lg"
                       style={{ background: 'var(--accent)', color: 'white' }}
                     >
                       View Certificate →
-                    </Link>
+                    </a>
                   </div>
                 </div>
               </motion.div>

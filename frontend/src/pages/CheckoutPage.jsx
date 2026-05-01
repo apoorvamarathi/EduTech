@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import api from '../utils/api';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -48,8 +49,12 @@ export default function CheckoutPage() {
     }
     setLoading(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Create enrollments in the backend for each course in the cart
+      for (const item of cartItems) {
+        await api.post(`/courses/${item.id}/enroll`);
+      }
+
       const paymentId = 'pay_' + Math.random().toString(36).substr(2, 10);
       const paymentData = {
         paymentId,
@@ -59,12 +64,16 @@ export default function CheckoutPage() {
         gst,
         discount,
       };
+      
       localStorage.setItem('lastPayment', JSON.stringify(paymentData));
-      console.log('Saved lastPayment:', paymentData); // Debug
       localStorage.removeItem('cart'); // clear cart after payment
       navigate('/payment-success');
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Payment/Enrollment failed');
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   if (cartItems.length === 0) {

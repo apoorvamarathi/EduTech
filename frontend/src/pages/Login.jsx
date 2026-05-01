@@ -17,7 +17,7 @@ export default function Login() {
       const { data } = await axios.post('http://localhost:5000/api/auth/login', { email, password });
       localStorage.setItem('userInfo', JSON.stringify(data));
       if (data.role === 'admin') navigate('/admin');
-      else if (data.role === 'instructor') navigate('/instructor/dashboard');
+      else if (data.role === 'instructor') navigate('/instructor');
       else navigate('/dashboard');
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');

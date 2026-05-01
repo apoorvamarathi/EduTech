@@ -101,8 +101,60 @@ const loginUser = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  const resetToken = crypto.randomBytes(20).toString('hex');
+  user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+  await user.save();
+
+  const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/resetpassword/${resetToken}`;
+  const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: 'Password reset token',
+      message,
+    });
+    res.status(200).json({ message: 'Email sent' });
+  } catch (err) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+    return res.status(500).json({ message: 'Email could not be sent' });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const resetPasswordToken = crypto.createHash('sha256').update(req.params.resettoken).digest('hex');
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return res.status(400).json({ message: 'Invalid token' });
+  }
+
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+  await user.save();
+
+  res.status(200).json({ message: 'Password reset successful' });
+};
+
 module.exports = {
   registerUser,
   verifyEmail,
   loginUser,
+  forgotPassword,
+  resetPassword,
 };

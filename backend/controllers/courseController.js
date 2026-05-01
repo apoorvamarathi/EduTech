@@ -6,7 +6,7 @@ const Enrollment = require('../models/enrollmentModel');
 // @route   POST /api/courses
 // @access  Private/Instructor
 const createCourse = async (req, res) => {
-  const { title, description, price, thumbnail, category, level } = req.body;
+  const { title, description, price, thumbnail, category, level, lessons } = req.body;
 
   const course = new Course({
     title,
@@ -19,6 +19,25 @@ const createCourse = async (req, res) => {
   });
 
   const createdCourse = await course.save();
+
+  if (lessons && lessons.length > 0) {
+    for (let i = 0; i < lessons.length; i++) {
+      const l = lessons[i];
+      if (l.title && (l.videoUrl || l.content)) {
+        const lesson = new Lesson({
+          title: l.title,
+          content: l.videoUrl || l.content,
+          type: 'video',
+          course: createdCourse._id,
+          order: i + 1,
+        });
+        const savedLesson = await lesson.save();
+        createdCourse.lessons.push(savedLesson._id);
+      }
+    }
+    await createdCourse.save();
+  }
+
   res.status(201).json(createdCourse);
 };
 
@@ -108,10 +127,77 @@ const enrollInCourse = async (req, res) => {
   }
 };
 
+// @desc    Update a course
+// @route   PUT /api/courses/:id
+// @access  Private/Instructor
+const updateCourse = async (req, res) => {
+  const course = await Course.findById(req.params.id);
+
+  if (course) {
+    if (course.instructor.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: 'Not authorized to update this course' });
+    }
+
+    const { lessons, ...courseData } = req.body;
+
+    const updatedCourse = await Course.findByIdAndUpdate(
+      req.params.id,
+      courseData,
+      { new: true }
+    );
+
+    if (lessons) {
+      // Remove old lessons
+      await Lesson.deleteMany({ course: updatedCourse._id });
+      updatedCourse.lessons = [];
+
+      for (let i = 0; i < lessons.length; i++) {
+        const l = lessons[i];
+        if (l.title && (l.videoUrl || l.content)) {
+          const lesson = new Lesson({
+            title: l.title,
+            content: l.videoUrl || l.content,
+            type: 'video',
+            course: updatedCourse._id,
+            order: i + 1,
+          });
+          const savedLesson = await lesson.save();
+          updatedCourse.lessons.push(savedLesson._id);
+        }
+      }
+      await updatedCourse.save();
+    }
+
+    res.json(updatedCourse);
+  } else {
+    res.status(404).json({ message: 'Course not found' });
+  }
+};
+
+// @desc    Delete a course
+// @route   DELETE /api/courses/:id
+// @access  Private/Instructor
+const deleteCourse = async (req, res) => {
+  const course = await Course.findById(req.params.id);
+
+  if (course) {
+    if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(401).json({ message: 'Not authorized to delete this course' });
+    }
+
+    await Course.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Course removed' });
+  } else {
+    res.status(404).json({ message: 'Course not found' });
+  }
+};
+
 module.exports = {
   createCourse,
   getCourses,
   getCourseById,
   addLesson,
   enrollInCourse,
+  updateCourse,
+  deleteCourse,
 };

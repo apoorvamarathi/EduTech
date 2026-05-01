@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import api from '../utils/api';
 
 export default function CourseDetails() {
   const { id } = useParams();
@@ -10,50 +11,40 @@ export default function CourseDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock API call – replace with real data fetch
-    setTimeout(() => {
-      setCourse({
-        id: parseInt(id),
-        title: 'React - The Complete Guide',
-        instructor: 'John Doe',
-        price: 49,
-        description: 'Learn React from scratch, build real apps, and master hooks, context, and performance.',
-        lessons: ['Introduction', 'Components & Props', 'State & Hooks', 'Effects & API Calls'],
-        duration: '12 hours',
-        students: 1234,
-        thumbnail: 'https://via.placeholder.com/300x150',
-      });
-      setLoading(false);
-    }, 500);
+    const fetchCourse = async () => {
+      try {
+        const { data } = await api.get(`/courses/${id}`);
+        setCourse(data);
+      } catch (err) {
+        console.error('Error fetching course', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourse();
   }, [id]);
-const handleEnroll = () => {
-  // Get existing cart
-  const existingCart = localStorage.getItem('cart');
-  let cart = existingCart ? JSON.parse(existingCart) : [];
 
-  // Check if course already in cart
-  const existingItem = cart.find(item => item.id === course.id);
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    cart.push({
-      id: course.id,
-      title: course.title,
-      price: course.price,
-      quantity: 1,
-      thumbnail: course.thumbnail,
-    });
-  }
+  const handleEnroll = () => {
+    // Check if course already in cart
+    const existingCart = localStorage.getItem('cart');
+    let cart = existingCart ? JSON.parse(existingCart) : [];
 
-  // Save to localStorage
-  localStorage.setItem('cart', JSON.stringify(cart));
-  
-  // Optional: verify it saved
-  console.log('Cart after adding:', JSON.parse(localStorage.getItem('cart')));
+    const existingItem = cart.find(item => item.id === course._id);
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({
+        id: course._id,
+        title: course.title,
+        price: course.price,
+        quantity: 1,
+        thumbnail: course.thumbnail,
+      });
+    }
 
-  // Go directly to payment checkout page
-  navigate('/checkout');
-};
+    localStorage.setItem('cart', JSON.stringify(cart));
+    navigate('/checkout');
+  };
 
   if (loading) return <Layout><div className="text-center py-20">Loading...</div></Layout>;
   if (!course) return <Layout><div className="text-center py-20">Course not found</div></Layout>;
@@ -63,9 +54,9 @@ const handleEnroll = () => {
       <div className="max-w-4xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold" style={{ color: 'var(--text-h)' }}>{course.title}</h1>
         <div className="flex gap-4 text-sm" style={{ color: 'var(--text)' }}>
-          <span>👨‍🏫 {course.instructor}</span>
-          <span>⏱️ {course.duration}</span>
-          <span>👥 {course.students} students</span>
+          <span>👨‍🏫 {course.instructor?.name || 'Instructor'}</span>
+          <span>⏱️ {course.duration || 'Flexible'}</span>
+          <span>👥 {course.studentsEnrolled?.length || 0} students</span>
         </div>
         <div className="p-6 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
           <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-h)' }}>Description</h2>
@@ -74,8 +65,8 @@ const handleEnroll = () => {
         <div className="p-6 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
           <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--text-h)' }}>Course Content</h2>
           <ul className="space-y-2">
-            {course.lessons.map((lesson, idx) => (
-              <li key={idx} className="flex items-center gap-2" style={{ color: 'var(--text)' }}>📘 {lesson}</li>
+            {course.lessons && course.lessons.map((lesson, idx) => (
+              <li key={idx} className="flex items-center gap-2" style={{ color: 'var(--text)' }}>📘 {lesson.title}</li>
             ))}
           </ul>
         </div>

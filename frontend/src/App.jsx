@@ -34,6 +34,7 @@ import RecruiterDashboard from './pages/RecruiterDashboard';
 import CreateCourse from './pages/CreateCourse';
 import InstructorCourses from './pages/InstructorDashboard';
 import EditCourse from './pages/EditCourse';
+import ManageQuiz from './pages/ManageQuiz';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
@@ -46,7 +47,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* <Route path="/" element={<LandingPage />} /> */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword/>}/>
@@ -90,6 +91,7 @@ function App() {
         <Route path="/create-course" element={<ProtectedRoute allowedRoles={['instructor']}><CreateCourse /></ProtectedRoute>} />
         <Route path="/my-courses" element={<ProtectedRoute allowedRoles={['instructor']}><InstructorCourses /></ProtectedRoute>} />
         <Route path="/edit-course/:id" element={<ProtectedRoute allowedRoles={['instructor']}><EditCourse /></ProtectedRoute>} />
+        <Route path="/manage-quiz/:courseId" element={<ProtectedRoute allowedRoles={['instructor']}><ManageQuiz /></ProtectedRoute>} />
       
       </Routes>
     </BrowserRouter>

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import api from '../utils/api';
 
 export default function CreateCourse() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function CreateCourse() {
     tags: '',
     lessons: [],
     assignment: { title: '', description: '', dueDate: '' },
-    thumbnail: null,
+    thumbnail: '',
   });
   const [lessonInput, setLessonInput] = useState({ title: '', videoUrl: '', pdfUrl: '' });
   const [loading, setLoading] = useState(false);
@@ -41,27 +42,24 @@ export default function CreateCourse() {
     setFormData(prev => ({ ...prev, lessons: prev.lessons.filter(l => l.id !== id) }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     const courseData = {
       ...formData,
-      id: Date.now(),
-      status: 'pending', // requires admin approval
-      instructorId: JSON.parse(localStorage.getItem('userInfo'))._id,
-      createdAt: new Date().toISOString(),
       tags: formData.tags.split(',').map(t => t.trim()),
-      price: formData.isFree ? 0 : parseFloat(formData.price),
+      price: formData.isFree ? 0 : parseFloat(formData.price || 0),
     };
-    // Save to localStorage (replace with API)
-    const existing = localStorage.getItem('instructorCourses');
-    const courses = existing ? JSON.parse(existing) : [];
-    courses.push(courseData);
-    localStorage.setItem('instructorCourses', JSON.stringify(courses));
-    setTimeout(() => {
-      alert('Course submitted for admin approval!');
-      navigate('/instructor/dashboard');
-    }, 1000);
+    
+    try {
+      await api.post('/courses', courseData);
+      alert('Course created successfully!');
+      navigate('/instructor');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to create course');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -138,7 +136,7 @@ export default function CreateCourse() {
                 </div>
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setStep(1)} className="px-4 py-2 rounded-lg border">Back</button>
-                  <button type="submit" disabled={loading} className="px-4 py-2 rounded-lg" style={{ background: 'var(--accent)', color: 'white' }}>{loading ? 'Submitting...' : 'Submit for Approval'}</button>
+                  <button type="submit" disabled={loading} className="px-4 py-2 rounded-lg" style={{ background: 'var(--accent)', color: 'white' }}>{loading ? 'Submitting...' : 'Submit Course'}</button>
                 </div>
               </>
             )}

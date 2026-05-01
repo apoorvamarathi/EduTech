@@ -22,11 +22,22 @@ connectDB();
 
 const app = express();
 
+const path = require('path');
+const startCronJobs = require('./services/cronTasks');
+const { initializeEventEmitter } = require('./services/eventEmitter');
+
+// Initialize services
+initializeEventEmitter();
+startCronJobs();
+
 // Body parser
 app.use(express.json());
 
 // Enable CORS
 app.use(cors());
+
+// Serve static files for certificates
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -34,6 +45,9 @@ app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/jobs', require('./routes/jobRoutes'));
+app.use('/api/quizzes', require('./routes/quizRoutes'));
+app.use('/api/certificates', require('./routes/certificateRoutes'));
 
 // Root route
 app.get('/', (req, res) => {

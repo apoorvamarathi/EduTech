@@ -2,25 +2,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import api from '../utils/api';
 
 export default function PostJob() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ title: '', location: '', salary: '', skills: '', description: '' });
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Mock save – add to localStorage jobs list
-    const existing = localStorage.getItem('recruiterJobs');
-    const jobs = existing ? JSON.parse(existing) : [];
-    const newJob = { id: Date.now(), ...form, skills: form.skills.split(',').map(s => s.trim()), postedAt: new Date().toISOString(), status: 'Active' };
-    jobs.push(newJob);
-    localStorage.setItem('recruiterJobs', JSON.stringify(jobs));
-    setTimeout(() => {
+    try {
+      await api.post('/jobs', {
+        title: form.title,
+        description: form.description + `\nLocation: ${form.location}\nSalary: ${form.salary}`,
+        skillsRequired: form.skills.split(',').map(s => s.trim())
+      });
       alert('Job posted successfully!');
       navigate('/recruiter/dashboard');
-    }, 1000);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error posting job');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -6,6 +6,8 @@ const {
   getCourseById,
   addLesson,
   enrollInCourse,
+  updateCourse,
+  deleteCourse,
 } = require('../controllers/courseController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -14,7 +16,9 @@ router.route('/')
   .post(protect, authorize('instructor'), createCourse);
 
 router.route('/:id')
-  .get(getCourseById);
+  .get(getCourseById)
+  .put(protect, authorize('instructor', 'admin'), updateCourse)
+  .delete(protect, authorize('instructor', 'admin'), deleteCourse);
 
 router.route('/:id/lessons')
   .post(protect, authorize('instructor'), addLesson);

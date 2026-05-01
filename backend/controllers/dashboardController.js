@@ -54,6 +54,44 @@ const getDashboardData = async (req, res) => {
   }
 };
 
+const Certificate = require('../models/certificateModel');
+const User = require('../models/userModel');
+
+const getLeaderboard = async (req, res) => {
+  // Simple leaderboard: top students by number of certificates
+  try {
+    const leaderboardData = await Certificate.aggregate([
+      {
+        $group: {
+          _id: '$student',
+          certificatesEarned: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { certificatesEarned: -1 },
+      },
+      {
+        $limit: 10,
+      },
+    ]);
+
+    const populatedLeaderboard = await User.populate(leaderboardData, { path: '_id', select: 'name email' });
+    
+    const formattedLeaderboard = populatedLeaderboard.map((item, index) => ({
+      rank: index + 1,
+      id: item._id._id,
+      name: item._id.name,
+      score: item.certificatesEarned * 100, // 100 points per certificate
+      badges: item.certificatesEarned >= 5 ? ['Master'] : item.certificatesEarned >= 1 ? ['Scholar'] : ['Beginner'],
+    }));
+
+    res.status(200).json(formattedLeaderboard);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching leaderboard' });
+  }
+};
+
 module.exports = {
   getDashboardData,
+  getLeaderboard,
 };

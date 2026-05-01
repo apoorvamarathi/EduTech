@@ -55,6 +55,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
+import api from '../utils/api';
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -62,15 +63,17 @@ export default function Courses() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call with working image URLs (picsum)
-    setTimeout(() => {
-      setCourses([
-        { id: 1, title: 'React - The Complete Guide', price: 49, instructor: 'John Doe', thumbnail: 'https://picsum.photos/id/100/300/150' },
-        { id: 2, title: 'Node.js API Mastery', price: 59, instructor: 'Jane Smith', thumbnail: 'https://picsum.photos/id/101/300/150' },
-        { id: 3, title: 'Tailwind CSS from Zero', price: 29, instructor: 'Mike Lee', thumbnail: 'https://picsum.photos/id/102/300/150' },
-      ]);
-      setLoading(false);
-    }, 500);
+    const fetchCourses = async () => {
+      try {
+        const { data } = await api.get('/courses');
+        setCourses(data);
+      } catch (err) {
+        console.error('Failed to fetch courses', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
   }, []);
 
   const filtered = courses.filter(c => c.title.toLowerCase().includes(search.toLowerCase()));
@@ -95,20 +98,20 @@ export default function Courses() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map(course => (
-              <div key={course.id} className="rounded-xl overflow-hidden transition hover:shadow-lg" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+              <div key={course._id} className="rounded-xl overflow-hidden transition hover:shadow-lg" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
                 <img 
-                  src={course.thumbnail} 
+                  src={course.thumbnail || 'https://via.placeholder.com/300x150?text=Course'} 
                   alt={course.title} 
                   className="w-full h-40 object-cover"
                   onError={(e) => { e.target.src = 'https://picsum.photos/id/20/300/150'; }}
                 />
                 <div className="p-4">
                   <h3 className="text-xl font-semibold" style={{ color: 'var(--text-h)' }}>{course.title}</h3>
-                  <p className="text-sm mt-1" style={{ color: 'var(--text)' }}>By {course.instructor}</p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--text)' }}>By {course.instructor?.name || 'Instructor'}</p>
                   <div className="flex justify-between items-center mt-4">
                     <span className="text-lg font-bold" style={{ color: 'var(--accent)' }}>${course.price}</span>
                     <Link 
-                      to={`/course/${course.id}`} 
+                      to={`/course/${course._id}`} 
                       className="px-4 py-2 rounded-lg text-sm font-medium transition hover:opacity-80"
                       style={{ background: 'var(--accent)', color: 'white' }}
                     >

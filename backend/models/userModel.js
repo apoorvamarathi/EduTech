@@ -18,7 +18,7 @@ const userSchema = mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['student', 'instructor', 'recruiter'],
+      enum: ['student', 'instructor', 'recruiter', 'admin'],
       default: 'student',
     },
     isVerified: {
@@ -27,6 +27,8 @@ const userSchema = mongoose.Schema(
     },
     otp: String,
     otpExpires: Date,
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
   {
     timestamps: true,
@@ -39,9 +41,9 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 // Encrypt password using bcrypt
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    next();
+    return;
   }
 
   const salt = await bcrypt.genSalt(10);

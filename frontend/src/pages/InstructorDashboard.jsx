@@ -2,29 +2,35 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
+import api from '../utils/api';
 
 export default function InstructorCourses() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('instructorCourses');
-    const instructorId = JSON.parse(localStorage.getItem('userInfo'))._id;
-    const allCourses = stored ? JSON.parse(stored) : [];
-    const myCourses = allCourses.filter(c => c.instructorId === instructorId);
-    setCourses(myCourses);
-    setLoading(false);
+    const fetchCourses = async () => {
+      try {
+        const { data } = await api.get('/dashboard');
+        setCourses(data.courses || []);
+      } catch (err) {
+        console.error('Failed to fetch instructor courses', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
   }, []);
 
-  const deleteCourse = (id) => {
+  const deleteCourse = async (id) => {
     if (window.confirm('Delete this course?')) {
-      const updated = courses.filter(c => c.id !== id);
-      // Update localStorage
-      const all = JSON.parse(localStorage.getItem('instructorCourses') || '[]');
-      const filteredAll = all.filter(c => c.id !== id);
-      localStorage.setItem('instructorCourses', JSON.stringify(filteredAll));
-      setCourses(updated);
-      alert('Course deleted');
+      try {
+        await api.delete(`/courses/${id}`);
+        setCourses(courses.filter(c => c.id !== id));
+        alert('Course deleted');
+      } catch (err) {
+        alert(err.response?.data?.message || 'Failed to delete course');
+      }
     }
   };
 
@@ -48,11 +54,12 @@ export default function InstructorCourses() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-semibold">{course.title}</h3>
-                  <p className="text-sm">Category: {course.category}</p>
-                  <p className="text-sm">Price: {course.isFree ? 'Free' : `₹${course.price}`}</p>
-                  <p className="text-xs">Status: <span style={{ color: course.status === 'approved' ? 'green' : 'orange' }}>{course.status}</span></p>
+                  <p className="text-sm">Students: {course.students || 0}</p>
+                  <p className="text-sm">Revenue: ₹{course.revenue || 0}</p>
+                  <p className="text-xs">Status: <span style={{ color: course.status === 'published' ? 'green' : 'orange' }}>{course.status}</span></p>
                 </div>
                 <div className="flex gap-2">
+                  <Link to={`/manage-quiz/${course.id}`} className="px-3 py-1 rounded-lg text-sm" style={{ background: 'var(--accent-bg)', color: 'var(--accent)', border: '1px solid var(--accent)' }}>Manage Quiz</Link>
                   <Link to={`/edit-course/${course.id}`} className="px-3 py-1 rounded-lg text-sm" style={{ background: 'var(--accent)', color: 'white' }}>Edit</Link>
                   <button onClick={() => deleteCourse(course.id)} className="px-3 py-1 rounded-lg text-sm border" style={{ borderColor: 'red', color: 'red' }}>Delete</button>
                 </div>

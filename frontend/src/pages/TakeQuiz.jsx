@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import api from '../utils/api';
 
 export default function TakeQuiz() {
   const { id } = useParams();
@@ -10,27 +11,26 @@ export default function TakeQuiz() {
   const [answers, setAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock quiz data
-    const mockQuiz = {
-      id: parseInt(id),
-      title: 'React Basics Quiz',
-      duration: 30, // minutes
-      passingScore: 70,
-      questions: [
-        { id: 1, text: 'What is React?', options: ['Library', 'Framework', 'Language', 'Tool'], correct: 0 },
-        { id: 2, text: 'What hook is used for side effects?', options: ['useState', 'useEffect', 'useContext', 'useReducer'], correct: 1 },
-        { id: 3, text: 'JSX allows mixing HTML with ___?', options: ['CSS', 'JavaScript', 'Python', 'Java'], correct: 1 },
-      ]
+    const fetchQuiz = async () => {
+      try {
+        const { data } = await api.get(`/quizzes/${id}`);
+        setQuiz(data);
+        setTimeLeft(30 * 60); // Default to 30 mins since the model didn't have duration.
+      } catch (error) {
+        console.error('Error fetching quiz', error);
+      } finally {
+        setLoading(false);
+      }
     };
-    setQuiz(mockQuiz);
-    setTimeLeft(mockQuiz.duration * 60);
+    fetchQuiz();
   }, [id]);
 
   // Timer countdown
   useEffect(() => {
-    if (timeLeft <= 0 || submitted) return;
+    if (timeLeft <= 0 || submitted || !quiz) return;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -42,46 +42,29 @@ export default function TakeQuiz() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, submitted]);
+  }, [timeLeft, submitted, quiz]);
 
   const handleAnswer = (qId, optionIndex) => {
     setAnswers(prev => ({ ...prev, [qId]: optionIndex }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (submitted) return;
-    
-    // Calculate score
-    let correct = 0;
-    quiz.questions.forEach(q => {
-      if (answers[q.id] === q.correct) correct++;
-    });
-    const percentage = (correct / quiz.questions.length) * 100;
-    const passed = percentage >= quiz.passingScore;
-
-    // --- Start of added attempt tracking ---
-    const attempt = {
-      date: new Date().toISOString(),
-      score: percentage,
-      passed,
-      answers
-    };
-    // Get existing attempts for this quiz from localStorage
-    const existingAttempts = localStorage.getItem(`quizAttempts_${quiz.id}`);
-    const attempts = existingAttempts ? JSON.parse(existingAttempts) : [];
-    attempts.push(attempt);
-    localStorage.setItem(`quizAttempts_${quiz.id}`, JSON.stringify(attempts));
-    // --- End of added attempt tracking ---
-
-    // Save result for quick access (kept for backward compatibility)
-    const result = { quizId: quiz.id, score: percentage, passed, answers };
-    localStorage.setItem(`quizResult_${quiz.id}`, JSON.stringify(result));
-    
     setSubmitted(true);
-    navigate(`/quiz-result/${quiz.id}`, { state: { score: percentage, passed, totalQuestions: quiz.questions.length, correct } });
+    
+    // Format answers array: array of selected option indices
+    const formattedAnswers = quiz.questions.map(q => answers[q._id] !== undefined ? answers[q._id] : -1);
+
+    try {
+      const { data } = await api.post(`/quizzes/${id}/submit`, { answers: formattedAnswers });
+      navigate(`/quiz-result/${quiz._id}`, { state: { score: data.percentage, passed: data.passed, totalQuestions: quiz.questions.length, correct: data.score } });
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error submitting quiz');
+    }
   };
 
-  if (!quiz) return <Layout><div className="text-center py-20">Loading quiz...</div></Layout>;
+  if (loading) return <Layout><div className="text-center py-20">Loading quiz...</div></Layout>;
+  if (!quiz) return <Layout><div className="text-center py-20">Quiz not found</div></Layout>;
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -97,12 +80,12 @@ export default function TakeQuiz() {
         </div>
         <div className="space-y-6">
           {quiz.questions.map((q, idx) => (
-            <div key={q.id} className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              <p className="font-semibold mb-3" style={{ color: 'var(--text-h)' }}>{idx+1}. {q.text}</p>
+            <div key={q._id} className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+              <p className="font-semibold mb-3" style={{ color: 'var(--text-h)' }}>{idx+1}. {q.questionText}</p>
               <div className="space-y-2">
                 {q.options.map((opt, optIdx) => (
                   <label key={optIdx} className="flex items-center gap-3 cursor-pointer">
-                    <input type="radio" name={`q${q.id}`} checked={answers[q.id] === optIdx} onChange={() => handleAnswer(q.id, optIdx)} />
+                    <input type="radio" name={`q${q._id}`} checked={answers[q._id] === optIdx} onChange={() => handleAnswer(q._id, optIdx)} />
                     <span style={{ color: 'var(--text)' }}>{opt}</span>
                   </label>
                 ))}
