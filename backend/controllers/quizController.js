@@ -18,8 +18,10 @@ const getQuizzesForCourse = async (req, res) => {
   res.status(200).json(quizzes);
 };
 
+const QuizSubmission = require('../models/quizSubmissionModel');
+
 const submitQuiz = async (req, res) => {
-  const { answers } = req.body; // array of option indices
+  const { answers, timeTaken } = req.body; 
   const quiz = await Quiz.findById(req.params.quizId);
 
   if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
@@ -31,6 +33,16 @@ const submitQuiz = async (req, res) => {
 
   const percentage = (score / quiz.questions.length) * 100;
   const passed = percentage >= quiz.passingScore;
+
+  // Save submission
+  await QuizSubmission.create({
+    user: req.user._id,
+    quiz: quiz._id,
+    score,
+    percentage,
+    passed,
+    timeTaken
+  });
 
   if (passed) {
     const enrollment = await Enrollment.findOne({ course: quiz.course, user: req.user._id });
@@ -51,6 +63,15 @@ const submitQuiz = async (req, res) => {
   res.status(200).json({ score, percentage, passed });
 };
 
+const getLeaderboard = async (req, res) => {
+  const submissions = await QuizSubmission.find({ quiz: req.params.quizId })
+    .populate('user', 'name')
+    .sort({ percentage: -1, timeTaken: 1 })
+    .limit(10);
+  
+  res.json(submissions);
+};
+
 const getQuizById = async (req, res) => {
   const quiz = await Quiz.findById(req.params.id);
   if (quiz) {
@@ -60,4 +81,4 @@ const getQuizById = async (req, res) => {
   }
 };
 
-module.exports = { createQuiz, getQuizzesForCourse, submitQuiz, getQuizById };
+module.exports = { createQuiz, getQuizzesForCourse, submitQuiz, getQuizById, getLeaderboard };

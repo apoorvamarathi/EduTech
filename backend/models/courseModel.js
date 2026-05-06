@@ -53,10 +53,15 @@ const courseSchema = mongoose.Schema(
         ref: 'User',
       },
     ],
+    tags: [String],
+    expiryDate: Date,
+    discountPrice: Number,
+    discountStart: Date,
+    discountEnd: Date,
     status: {
       type: String,
-      enum: ['Draft', 'Published'],
-      default: 'Published',
+      enum: ['Draft', 'Pending', 'Published', 'Archived'],
+      default: 'Pending', // New courses start as Pending for admin approval
     },
   },
   {

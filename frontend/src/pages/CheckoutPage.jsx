@@ -42,6 +42,16 @@ export default function CheckoutPage() {
     }
   };
 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const initiatePayment = async () => {
     if (cartItems.length === 0) {
       alert('Your cart is empty');
@@ -49,30 +59,92 @@ export default function CheckoutPage() {
     }
     setLoading(true);
 
+    const res = await loadRazorpayScript();
+    if (!res) {
+      alert('Razorpay SDK failed to load. Are you online?');
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Create enrollments in the backend for each course in the cart
-      for (const item of cartItems) {
-        await api.post(`/courses/${item.id}/enroll`);
+      // 1. Create order
+      const item = cartItems[0];
+      const { data: order } = await api.post('/payments/razorpay/order', { courseId: item.id });
+
+      // 2. Handle Mock vs Real flow
+      if (order.mock) {
+        // SMART DEMO MODE: Simulate a sleek payment process for the recording
+        setLoading(true);
+        setTimeout(async () => {
+          try {
+            const verifyData = {
+              razorpay_order_id: order.id,
+              razorpay_payment_id: 'pay_mock_' + Math.random().toString(36).substr(2, 9),
+              razorpay_signature: 'mock_signature',
+              courseId: item.id,
+              mock: true
+            };
+            await api.post('/payments/razorpay/verify', verifyData);
+            localStorage.setItem('lastPayment', JSON.stringify({
+              paymentId: verifyData.razorpay_payment_id,
+              amount: total,
+              items: cartItems,
+              date: new Date().toISOString()
+            }));
+            localStorage.removeItem('cart');
+            navigate('/payment-success');
+          } catch (err) {
+            alert('Mock payment failed');
+            setLoading(false);
+          }
+        }, 2000); // 2 second delay to look realistic in the video
+        return;
       }
 
-      const paymentId = 'pay_' + Math.random().toString(36).substr(2, 10);
-      const paymentData = {
-        paymentId,
-        amount: total,
-        items: cartItems,
-        date: new Date().toISOString(),
-        gst,
-        discount,
+      // REAL RAZORPAY FLOW (Only if keys are valid)
+      const options = {
+        key: order.key || 'rzp_test_placeholder', 
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Edutech Platform',
+        description: `Purchase: ${item.title}`,
+        order_id: order.id,
+        handler: async function (response) {
+          try {
+            const verifyData = {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              courseId: item.id,
+              mock: false
+            };
+            await api.post('/payments/razorpay/verify', verifyData);
+            localStorage.setItem('lastPayment', JSON.stringify({
+              paymentId: response.razorpay_payment_id,
+              amount: total,
+              items: cartItems,
+              date: new Date().toISOString()
+            }));
+            localStorage.removeItem('cart');
+            navigate('/payment-success');
+          } catch (err) {
+            alert('Payment verification failed');
+          }
+        },
+        prefill: {
+          name: JSON.parse(localStorage.getItem('userInfo') || '{}').name,
+          email: JSON.parse(localStorage.getItem('userInfo') || '{}').email,
+        },
+        theme: { color: '#6366f1' },
       };
-      
-      localStorage.setItem('lastPayment', JSON.stringify(paymentData));
-      localStorage.removeItem('cart'); // clear cart after payment
-      navigate('/payment-success');
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || 'Payment/Enrollment failed');
+      alert('Could not initiate payment');
     } finally {
-      setLoading(false);
+      if (!loading) setLoading(false);
     }
   };
 

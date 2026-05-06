@@ -22,6 +22,10 @@ const quizSchema = mongoose.Schema(
       type: Number,
       default: 70, // percentage
     },
+    timeLimit: {
+      type: Number,
+      default: 30, // minutes
+    },
   },
   { timestamps: true }
 );

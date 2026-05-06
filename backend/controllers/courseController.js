@@ -45,7 +45,16 @@ const createCourse = async (req, res) => {
 // @route   GET /api/courses
 // @access  Public
 const getCourses = async (req, res) => {
-  const courses = await Course.find({ status: 'Published' }).populate('instructor', 'name');
+  const keyword = req.query.keyword ? {
+    title: {
+      $regex: req.query.keyword,
+      $options: 'i'
+    }
+  } : {};
+  
+  const category = req.query.category ? { category: req.query.category } : {};
+
+  const courses = await Course.find({ ...keyword, ...category, status: 'Published' }).populate('instructor', 'name');
   res.json(courses);
 };
 
@@ -117,6 +126,13 @@ const enrollInCourse = async (req, res) => {
     });
 
     await enrollment.save();
+
+    const sendEmail = require('../utils/sendEmail');
+    await sendEmail({
+      email: req.user.email,
+      subject: `Enrollment Confirmation: ${course.title}`,
+      message: `Congratulations ${req.user.name}, you have successfully enrolled in ${course.title}. Happy learning!`,
+    });
 
     course.studentsEnrolled.push(req.user._id);
     await course.save();
@@ -192,6 +208,22 @@ const deleteCourse = async (req, res) => {
   }
 };
 
+const getPendingCourses = async (req, res) => {
+  const courses = await Course.find({ status: 'Pending' }).populate('instructor', 'name');
+  res.json(courses);
+};
+
+const approveCourse = async (req, res) => {
+  const course = await Course.findById(req.params.id);
+  if (course) {
+    course.status = 'Published';
+    await course.save();
+    res.json({ message: 'Course approved and published' });
+  } else {
+    res.status(404).json({ message: 'Course not found' });
+  }
+};
+
 module.exports = {
   createCourse,
   getCourses,
@@ -200,4 +232,6 @@ module.exports = {
   enrollInCourse,
   updateCourse,
   deleteCourse,
+  getPendingCourses,
+  approveCourse,
 };

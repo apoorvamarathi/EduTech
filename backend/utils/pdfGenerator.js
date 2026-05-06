@@ -5,6 +5,7 @@ const User = require('../models/userModel');
 const Course = require('../models/courseModel');
 const Certificate = require('../models/certificateModel');
 const sendEmail = require('./sendEmail');
+const QRCode = require('qrcode');
 
 const generateCertificateForUser = async (studentId, courseId) => {
   const user = await User.findById(studentId);
@@ -42,19 +43,24 @@ const generateCertificateForUser = async (studentId, courseId) => {
   doc.moveDown();
   doc.fontSize(25).fillColor('#28a745').text(course.title, { align: 'center' });
   
-  doc.end();
-
-  await new Promise((resolve, reject) => {
-    writeStream.on('finish', resolve);
-    writeStream.on('error', reject);
-  });
-
   const pdfUrl = `/public/certificates/${filename}`;
 
   const certificate = await Certificate.create({
     student: studentId,
     course: courseId,
     pdfUrl,
+  });
+
+  // Generate QR code for verification
+  const qrData = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/certificate/${certificate._id}`;
+  const qrImage = await QRCode.toDataURL(qrData);
+  doc.image(qrImage, 650, 450, { width: 100 });
+  
+  doc.end();
+
+  await new Promise((resolve, reject) => {
+    writeStream.on('finish', resolve);
+    writeStream.on('error', reject);
   });
 
   await sendEmail({

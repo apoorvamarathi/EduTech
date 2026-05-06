@@ -48,6 +48,7 @@ app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/jobs', require('./routes/jobRoutes'));
 app.use('/api/quizzes', require('./routes/quizRoutes'));
 app.use('/api/certificates', require('./routes/certificateRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 // Root route
 app.get('/', (req, res) => {
