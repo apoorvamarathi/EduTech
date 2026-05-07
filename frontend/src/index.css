@@ -1,4 +1,4 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -133,4 +133,29 @@ code {
     box-shadow: none;
     border: none;
   }
+}
+   */
+
+   @tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-800;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* CSS variables for backward compatibility (used by some components) */
+:root {
+  --text: #4b5563;      /* gray-600 */
+  --text-h: #1f2937;    /* gray-800 */
+  --bg: #ffffff;
+  --border: #e5e7eb;    /* gray-200 */
+  --code-bg: #f3f4f6;   /* gray-100 */
+  --accent: #2563eb;    /* blue-600 */
+  --accent-bg: #eff6ff; /* blue-50 */
+  --accent-border: #bfdbfe; /* blue-200 */
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
