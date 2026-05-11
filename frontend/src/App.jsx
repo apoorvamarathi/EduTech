@@ -47,8 +47,13 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+<<<<<<< HEAD
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
+=======
+        {/* <Route path="/" element={<LandingPage />} /> */}
+        <Route path="/login" element={<Login/>} />
+>>>>>>> 54e06cf2266318920fd5b1fd1021b7e91ef2cb48
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword/>}/>
         <Route path="/reset-password" element={<ResetPassword/>}/>
