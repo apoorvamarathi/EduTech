@@ -1,4 +1,8 @@
+
+
+
 // frontend/src/pages/ManageApplications.jsx
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -13,7 +17,6 @@ export default function ManageApplications() {
     const fetchApps = async () => {
       try {
         const { data } = await api.get('/jobs/applications');
-        // If jobId is provided in URL, filter, else show all
         const filtered = jobId ? data.filter(app => app.job?._id === jobId) : data;
         setApplications(filtered);
       } catch (err) {
@@ -43,41 +46,82 @@ export default function ManageApplications() {
     }
   };
 
-  if (loading) return <Layout><div className="text-center py-20">Loading applications...</div></Layout>;
+  const getStatusColor = (status) => {
+    const colors = {
+      'Applied': 'text-yellow-400 bg-yellow-500/10',
+      'Shortlisted': 'text-blue-400 bg-blue-500/10',
+      'Interviewed': 'text-purple-400 bg-purple-500/10',
+      'Selected': 'text-green-400 bg-green-500/10',
+      'Hired': 'text-green-400 bg-green-500/10',
+      'Rejected': 'text-red-400 bg-red-500/10'
+    };
+    return colors[status] || 'text-gray-400 bg-gray-500/10';
+  };
+
+  if (loading) return <Layout><div className="text-center py-20 text-white">Loading applications...</div></Layout>;
 
   return (
     <Layout>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--text-h)' }}>Applications {jobId ? `for Job #${jobId}` : 'for all your jobs'}</h1>
-        <div className="space-y-4">
-          {applications.length === 0 && <p>No applications found.</p>}
+        <div>
+          <h1 className="text-3xl font-bold text-white">Manage Applications</h1>
+          <p className="text-indigo-300 mt-1">{jobId ? `Applications for Job #${jobId}` : 'All applications for your jobs'}</p>
+        </div>
+        
+        <div className="grid gap-4">
+          {applications.length === 0 && (
+            <div className="text-center py-12 rounded-xl bg-[#1E293B]/80 backdrop-blur-sm border border-indigo-500/20">
+              <p className="text-gray-400">No applications found.</p>
+            </div>
+          )}
+          
           {applications.map(app => (
-            <div key={app._id} className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              <div className="flex justify-between items-start flex-wrap">
+            <div key={app._id} className="p-5 rounded-xl bg-[#1E293B]/80 backdrop-blur-sm border border-indigo-500/20 hover:border-indigo-500/40 transition">
+              <div className="flex justify-between items-start flex-wrap gap-4">
                 <div>
-                  <h3 className="font-semibold" style={{ color: 'var(--text-h)' }}>{app.student?.name} <span className="text-sm font-normal text-gray-500">for {app.job?.title}</span></h3>
-                  <p className="text-sm">Email: {app.student?.email}</p>
-                  <p className="text-xs">Applied: {new Date(app.createdAt).toLocaleDateString()}</p>
-                  {app.resumeUrl && <a href={app.resumeUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>View Resume</a>}
+                  <h3 className="text-xl font-semibold text-white">{app.student?.name}</h3>
+                  <p className="text-indigo-300 text-sm mt-1">📧 {app.student?.email}</p>
+                  <p className="text-sm text-gray-400 mt-1">💼 {app.job?.title}</p>
+                  <p className="text-xs text-gray-500 mt-1">Applied: {new Date(app.createdAt).toLocaleDateString()}</p>
+                  {app.resumeUrl && (
+                    <a href={app.resumeUrl} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:text-indigo-300 transition mt-2 inline-block">
+                      📄 View Resume →
+                    </a>
+                  )}
                 </div>
                 <div className="text-right">
+                  <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(app.status)}`}>
+                    {app.status}
+                  </span>
+                  
                   {app.status === 'Applied' && (
-                    <div className="flex gap-2">
-                      <button onClick={() => updateStatus(app._id, 'Shortlisted')} className="px-3 py-1 rounded-lg text-sm" style={{ background: 'var(--accent)', color: 'white' }}>Shortlist</button>
-                      <button onClick={() => updateStatus(app._id, 'Rejected')} className="px-3 py-1 rounded-lg text-sm border" style={{ borderColor: 'var(--border)' }}>Reject</button>
+                    <div className="flex gap-2 mt-3">
+                      <button 
+                        onClick={() => updateStatus(app._id, 'Shortlisted')} 
+                        className="px-3 py-1 rounded-lg text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                      >
+                        Shortlist
+                      </button>
+                      <button 
+                        onClick={() => updateStatus(app._id, 'Rejected')} 
+                        className="px-3 py-1 rounded-lg text-sm border border-red-500/50 text-red-400 hover:bg-red-500/10 transition"
+                      >
+                        Reject
+                      </button>
                     </div>
                   )}
+                  
                   {app.status === 'Shortlisted' && (
-                    <div>
-                      <span className="text-sm text-yellow-600 font-semibold block mb-2">Shortlisted</span>
-                      <button onClick={() => scheduleInterview(app._id)} className="px-3 py-1 rounded-lg text-sm" style={{ background: 'var(--accent)', color: 'white' }}>Schedule Interview</button>
-                    </div>
+                    <button 
+                      onClick={() => scheduleInterview(app._id)} 
+                      className="mt-3 px-3 py-1 rounded-lg text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                    >
+                      Schedule Interview
+                    </button>
                   )}
-                  {(app.status === 'Interviewed' || app.status === 'Selected' || app.status === 'Hired') && <span className="text-sm text-green-600 font-semibold">{app.status}</span>}
-                  {app.status === 'Rejected' && <span className="text-sm text-red-500 font-semibold">Rejected</span>}
                   
                   {app.interviewDate && (
-                    <p className="text-xs mt-2">Interview: {new Date(app.interviewDate).toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 mt-2">📅 {new Date(app.interviewDate).toLocaleString()}</p>
                   )}
                 </div>
               </div>

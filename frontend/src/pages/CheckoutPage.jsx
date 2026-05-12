@@ -1,4 +1,7 @@
+
+
 // frontend/src/pages/CheckoutPage.jsx
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -23,7 +26,6 @@ export default function CheckoutPage() {
     setGst(sum * 0.18);
   }, []);
 
-  // Recalculate total whenever subtotal, gst, or discount changes
   useEffect(() => {
     setTotal(subtotal + gst - discount);
   }, [subtotal, gst, discount]);
@@ -67,13 +69,10 @@ export default function CheckoutPage() {
     }
 
     try {
-      // 1. Create order
       const item = cartItems[0];
       const { data: order } = await api.post('/payments/razorpay/order', { courseId: item.id });
 
-      // 2. Handle Mock vs Real flow
       if (order.mock) {
-        // SMART DEMO MODE: Simulate a sleek payment process for the recording
         setLoading(true);
         setTimeout(async () => {
           try {
@@ -97,11 +96,10 @@ export default function CheckoutPage() {
             alert('Mock payment failed');
             setLoading(false);
           }
-        }, 2000); // 2 second delay to look realistic in the video
+        }, 2000);
         return;
       }
 
-      // REAL RAZORPAY FLOW (Only if keys are valid)
       const options = {
         key: order.key || 'rzp_test_placeholder', 
         amount: order.amount,
@@ -152,7 +150,7 @@ export default function CheckoutPage() {
     return (
       <Layout>
         <div className="text-center py-20">
-          <p>Your cart is empty. <a href="/courses" style={{ color: 'var(--accent)' }}>Go to courses</a></p>
+          <p className="text-gray-400">Your cart is empty. <a href="/courses" className="text-indigo-400 hover:text-indigo-300">Go to courses</a></p>
         </div>
       </Layout>
     );
@@ -161,52 +159,58 @@ export default function CheckoutPage() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--text-h)' }}>Checkout</h1>
+        <h1 className="text-3xl font-bold text-white">Checkout</h1>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-4">
-            <div className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              <h2 className="text-lg font-semibold mb-3">Order Summary</h2>
+            <div className="p-4 rounded-xl bg-[#1E293B]/80 backdrop-blur-sm border border-indigo-500/20">
+              <h2 className="text-lg font-semibold mb-3 text-white">Order Summary</h2>
               {cartItems.map(item => (
-                <div key={item.id} className="flex justify-between py-2 border-b" style={{ borderColor: 'var(--border)' }}>
+                <div key={item.id} className="flex justify-between py-2 border-b border-indigo-500/20">
                   <div>
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-sm">Qty: {item.quantity}</p>
+                    <p className="font-medium text-white">{item.title}</p>
+                    <p className="text-sm text-gray-400">Qty: {item.quantity}</p>
                   </div>
-                  <p>₹{item.price * item.quantity}</p>
+                  <p className="text-indigo-400">₹{item.price * item.quantity}</p>
                 </div>
               ))}
             </div>
-            <div className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              <h2 className="text-lg font-semibold mb-2">Coupon</h2>
+            <div className="p-4 rounded-xl bg-[#1E293B]/80 backdrop-blur-sm border border-indigo-500/20">
+              <h2 className="text-lg font-semibold mb-2 text-white">Coupon</h2>
               <div className="flex gap-2">
-                <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Enter code" className="flex-1 px-3 py-2 rounded-lg border" style={{ background: 'var(--bg)', borderColor: 'var(--border)' }} />
-                <button onClick={applyCoupon} className="px-4 py-2 rounded-lg" style={{ background: 'var(--accent)', color: 'white' }}>Apply</button>
+                <input 
+                  type="text" 
+                  value={couponCode} 
+                  onChange={(e) => setCouponCode(e.target.value)} 
+                  placeholder="Enter code" 
+                  className="flex-1 px-3 py-2 rounded-lg border bg-[#0F172A] border-indigo-500/30 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500" 
+                />
+                <button onClick={applyCoupon} className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition">Apply</button>
               </div>
             </div>
-            <div className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              <h2 className="text-lg font-semibold mb-3">Payment Method</h2>
+            <div className="p-4 rounded-xl bg-[#1E293B]/80 backdrop-blur-sm border border-indigo-500/20">
+              <h2 className="text-lg font-semibold mb-3 text-white">Payment Method</h2>
               <div className="space-y-2">
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="payment" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} />
+                <label className="flex items-center gap-2 text-gray-300">
+                  <input type="radio" name="payment" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="accent-indigo-500" />
                   <span>Razorpay (Card/UPI/NetBanking)</span>
                 </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="payment" value="stripe" checked={paymentMethod === 'stripe'} onChange={() => setPaymentMethod('stripe')} />
+                <label className="flex items-center gap-2 text-gray-300">
+                  <input type="radio" name="payment" value="stripe" checked={paymentMethod === 'stripe'} onChange={() => setPaymentMethod('stripe')} className="accent-indigo-500" />
                   <span>Stripe (International Cards)</span>
                 </label>
               </div>
             </div>
           </div>
           <div className="space-y-4">
-            <div className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              <h2 className="text-lg font-semibold mb-3">Price Details</h2>
+            <div className="p-4 rounded-xl bg-[#1E293B]/80 backdrop-blur-sm border border-indigo-500/20">
+              <h2 className="text-lg font-semibold mb-3 text-white">Price Details</h2>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span>Subtotal</span><span>₹{subtotal}</span></div>
-                <div className="flex justify-between"><span>GST (18%)</span><span>₹{gst}</span></div>
-                {discount > 0 && <div className="flex justify-between" style={{ color: 'var(--accent)' }}><span>Discount</span><span>- ₹{discount}</span></div>}
-                <div className="flex justify-between font-bold pt-2 border-t"><span>Total</span><span>₹{total}</span></div>
+                <div className="flex justify-between text-gray-300"><span>Subtotal</span><span>₹{subtotal}</span></div>
+                <div className="flex justify-between text-gray-300"><span>GST (18%)</span><span>₹{gst}</span></div>
+                {discount > 0 && <div className="flex justify-between text-indigo-400"><span>Discount</span><span>- ₹{discount}</span></div>}
+                <div className="flex justify-between font-bold pt-2 border-t border-indigo-500/20 text-white"><span>Total</span><span className="text-indigo-400">₹{total}</span></div>
               </div>
-              <button onClick={initiatePayment} disabled={loading} className="w-full mt-4 py-2 rounded-lg font-semibold disabled:opacity-50" style={{ background: 'var(--accent)', color: 'white' }}>
+              <button onClick={initiatePayment} disabled={loading} className="w-full mt-4 py-2 rounded-lg font-semibold disabled:opacity-50 bg-indigo-600 text-white hover:bg-indigo-700 transition">
                 {loading ? 'Processing...' : `Pay ₹${total}`}
               </button>
             </div>

@@ -1,4 +1,10 @@
+
+
+
+
+
 // frontend/src/pages/JobsList.jsx
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -41,7 +47,7 @@ export default function JobsList() {
     try {
       await api.post('/jobs/apply', {
         jobId: showApply,
-        resumeUrl: 'https://example.com/resume.pdf' // Assuming student profile has a resume URL logic
+        resumeUrl: 'https://example.com/resume.pdf'
       });
       alert('Application submitted! The recruiter will review your profile.');
       setShowApply(null);
@@ -53,43 +59,81 @@ export default function JobsList() {
     }
   };
 
-  if (loading) return <Layout><div className="text-center py-20">Loading jobs...</div></Layout>;
+  if (loading) return <Layout><div className="text-center py-20 text-white">Loading jobs...</div></Layout>;
 
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-h)' }}>Job Opportunities</h1>
-          {isStudent && <Link to="/student-profile" className="text-sm underline" style={{ color: 'var(--accent)' }}>Update Profile for Matching</Link>}
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Job Opportunities</h1>
+            <p className="text-indigo-300 mt-1">Find your dream job</p>
+          </div>
+          {isStudent && (
+            <Link to="/student-profile" className="text-sm text-indigo-400 hover:text-indigo-300 transition underline">
+              Update Profile for Matching →
+            </Link>
+          )}
         </div>
+        
         <div className="grid gap-4">
-          {jobs.length === 0 && <p>No open jobs available.</p>}
+          {jobs.length === 0 && (
+            <div className="text-center py-12 rounded-xl bg-[#1E293B]/80 backdrop-blur-sm border border-indigo-500/20">
+              <p className="text-gray-400">No open jobs available.</p>
+            </div>
+          )}
+          
           {jobs.map(job => (
-            <div key={job._id} className="p-4 rounded-xl" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              <div className="flex justify-between items-start flex-wrap">
+            <div key={job._id} className="p-5 rounded-xl bg-[#1E293B]/80 backdrop-blur-sm border border-indigo-500/20 hover:border-indigo-500/40 transition">
+              <div className="flex justify-between items-start flex-wrap gap-4">
                 <div>
-                  <h3 className="text-xl font-semibold" style={{ color: 'var(--text-h)' }}>{job.title}</h3>
-                  <p className="text-sm" style={{ color: 'var(--text)' }}>{job.recruiter?.name} · {job.recruiter?.company || 'Remote'} </p>
-                  <p className="text-xs mt-1">Posted: {new Date(job.createdAt).toLocaleDateString()}</p>
-                  <div className="flex gap-2 mt-2">
-                    {job.skillsRequired && job.skillsRequired.map(skill => <span key={skill} className="text-xs px-2 py-1 rounded-full" style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>{skill}</span>)}
+                  <h3 className="text-xl font-semibold text-white">{job.title}</h3>
+                  <p className="text-indigo-300 text-sm mt-1">🏢 {job.recruiter?.name} · {job.recruiter?.company || 'Remote'}</p>
+                  <p className="text-xs text-gray-400 mt-1">📅 Posted: {new Date(job.createdAt).toLocaleDateString()}</p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {job.skillsRequired && job.skillsRequired.map(skill => (
+                      <span key={skill} className="text-xs px-2 py-1 rounded-full bg-indigo-500/20 text-indigo-300">#{skill}</span>
+                    ))}
                   </div>
                 </div>
-                <button onClick={() => handleApply(job._id)} className="px-4 py-2 rounded-lg text-sm" style={{ background: 'var(--accent)', color: 'white' }}>Apply</button>
+                <button 
+                  onClick={() => handleApply(job._id)} 
+                  className="px-5 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/20"
+                >
+                  Apply Now →
+                </button>
               </div>
             </div>
           ))}
         </div>
+        
         {showApply && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-            <div className="p-6 rounded-xl max-w-lg w-full" style={{ background: 'var(--bg)' }}>
-              <h2 className="text-xl font-bold mb-4">Submit Application</h2>
-              <label className="block text-sm mb-1">Cover Letter</label>
-              <textarea placeholder="Why are you a good fit?" rows="4" value={coverLetter} onChange={e => setCoverLetter(e.target.value)} className="w-full p-2 rounded-lg border" style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}></textarea>
-              <p className="text-xs mt-2" style={{ color: 'var(--text)' }}>Your resume from profile will be attached automatically.</p>
-              <div className="flex gap-3 mt-4">
-                <button onClick={submitApplication} disabled={applying} className="flex-1 py-2 rounded-lg" style={{ background: 'var(--accent)', color: 'white' }}>{applying ? 'Submitting...' : 'Submit'}</button>
-                <button onClick={() => setShowApply(null)} className="flex-1 py-2 rounded-lg border" style={{ borderColor: 'var(--border)' }}>Cancel</button>
+          <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
+            <div className="p-6 rounded-xl max-w-lg w-full bg-[#1E293B] border border-indigo-500/20 shadow-2xl">
+              <h2 className="text-2xl font-bold text-white mb-4">Submit Application</h2>
+              <label className="block text-sm text-indigo-300 mb-1">Cover Letter</label>
+              <textarea 
+                placeholder="Why are you a good fit?" 
+                rows="4" 
+                value={coverLetter} 
+                onChange={e => setCoverLetter(e.target.value)} 
+                className="w-full p-3 rounded-lg border border-indigo-500/30 bg-[#0F172A] text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500"
+              ></textarea>
+              <p className="text-xs mt-2 text-gray-400">📄 Your resume from profile will be attached automatically.</p>
+              <div className="flex gap-3 mt-5">
+                <button 
+                  onClick={submitApplication} 
+                  disabled={applying} 
+                  className="flex-1 py-2 rounded-lg font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition disabled:opacity-50"
+                >
+                  {applying ? 'Submitting...' : 'Submit Application'}
+                </button>
+                <button 
+                  onClick={() => setShowApply(null)} 
+                  className="flex-1 py-2 rounded-lg font-medium border border-indigo-500/30 text-gray-300 hover:bg-indigo-500/10 transition"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
