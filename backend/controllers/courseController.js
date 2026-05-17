@@ -224,6 +224,31 @@ const approveCourse = async (req, res) => {
   }
 };
 
+const rejectCourse = async (req, res) => {
+  const course = await Course.findById(req.params.id).populate('instructor', 'name email');
+  if (course) {
+    course.status = 'Rejected';
+    await course.save();
+
+    if (course.instructor && course.instructor.email) {
+      const sendEmail = require('../utils/sendEmail');
+      try {
+        await sendEmail({
+          email: course.instructor.email,
+          subject: `Action Required: Your course "${course.title}" was rejected`,
+          message: `Dear ${course.instructor.name},\n\nWe have reviewed your course "${course.title}" but unfortunately it did not meet our guidelines and has been rejected.\n\nDon't worry! Your course has not been deleted. You can log in to your instructor dashboard, edit the course to fix any issues, and submit it for review again.\n\nBest regards,\nEduTech Admin Team`,
+        });
+      } catch (err) {
+        console.error('Error sending rejection email:', err);
+      }
+    }
+
+    res.json({ message: 'Course rejected' });
+  } else {
+    res.status(404).json({ message: 'Course not found' });
+  }
+};
+
 module.exports = {
   createCourse,
   getCourses,
@@ -234,4 +259,5 @@ module.exports = {
   deleteCourse,
   getPendingCourses,
   approveCourse,
+  rejectCourse,
 };

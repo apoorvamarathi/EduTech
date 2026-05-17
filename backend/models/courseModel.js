@@ -60,7 +60,7 @@ const courseSchema = mongoose.Schema(
     discountEnd: Date,
     status: {
       type: String,
-      enum: ['Draft', 'Pending', 'Published', 'Archived'],
+      enum: ['Draft', 'Pending', 'Published', 'Archived', 'Rejected'],
       default: 'Pending', // New courses start as Pending for admin approval
     },
   },

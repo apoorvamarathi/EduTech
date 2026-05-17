@@ -40,6 +40,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleReject = async (courseId) => {
+    if (window.confirm('Are you sure you want to reject this course? The instructor will be notified to make changes.')) {
+      try {
+        await api.put(`/courses/${courseId}/reject`);
+        setPendingCourses(prev => prev.filter(c => c._id !== courseId));
+        alert('Course rejected and instructor notified.');
+      } catch (err) {
+        alert('Failed to reject course');
+      }
+    }
+  };
+
   if (loading) return <Layout><div className="text-center py-20 text-white">Loading Admin Panel...</div></Layout>;
 
   return (
@@ -95,6 +107,7 @@ export default function AdminDashboard() {
                       Approve & Publish
                     </button>
                     <button 
+                      onClick={() => handleReject(course._id)}
                       className="px-4 py-1.5 rounded-lg text-sm font-medium border border-red-500/50 text-red-400 hover:bg-red-500/10 transition"
                     >
                       Reject
